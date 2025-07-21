@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Create Custom Persona{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <!-- Header Section -->
+        <div class="text-center mb-4">
+            <h1 class="display-4 mb-3">Create a New Persona</h1>
+            <p class="lead text-muted">Build your own AI companion from any Wikipedia article</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="card">
+            <div class="card-header text-center">
+                <div class="mb-3">
+                    <i class="bi bi-person-plus display-4 text-primary"></i>
+                </div>
+                <h2 class="card-title">Persona Creation</h2>
+                <p class="text-muted small mb-0">Define your AI companion's personality and knowledge base</p>
+            </div>
+            <div class="card-body p-4">
+                {% if error %}
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>{{ error }}</div>
+                </div>
+                {% endif %}
+
+                <form action="/create" method="POST" id="create-form">
+                    <!-- Persona Name -->
+                    <div class="mb-4">
+                        <label for="name" class="form-label">
+                            <i class="bi bi-person-badge me-2"></i>Persona Name
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="e.g., 'Marie Curie' or 'Julius Caesar'" required>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            This should match a Wikipedia article title for best results.
+                        </div>
+                    </div>
+                    
+                    <!-- Core Characteristics -->
+                    <div class="mb-4">
+                        <label for="characteristics" class="form-label">
+                            <i class="bi bi-gear me-2"></i>Core Characteristics
+                        </label>
+                        <textarea class="form-control" id="characteristics" name="characteristics" rows="4" 
+                                  placeholder="Define how the persona should think and speak, for example:
+
+• A brilliant physicist and chemist
+• Driven and resilient in the face of adversity
+• Humble about her achievements
+• Speaks with wisdom and scientific precision" required></textarea>
+                        <div class="form-text">
+                            <i class="bi bi-lightbulb me-1"></i>
+                            Define the personality traits, speaking style, and behavioral patterns.
+                        </div>
+                    </div>
+
+                    <!-- Image URL -->
+                    <div class="mb-4">
+                        <label for="image_url" class="form-label">
+                            <i class="bi bi-image me-2"></i>Profile Image (Optional)
+                        </label>
+                        <input type="url" class="form-control" id="image_url" name="image_url" 
+                               placeholder="https://example.com/image.jpg">
+                        <div class="form-text">
+                            <i class="bi bi-link-45deg me-1"></i>
+                            Link to a profile image. A default image will be used if left blank.
+                        </div>
+                        <div class="mb-4 text-center">
+                            <img id="persona-preview" src="/static/img/default-avatar.png" alt="Persona Preview" class="persona-avatar shadow" style="width: 96px; height: 96px; object-fit: cover;">
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-lg" id="submit-btn">
+                            <span id="btn-text">
+                                <i class="bi bi-magic me-2"></i>Create and Build Knowledge Base
+                            </span>
+                            <span class="spinner-border spinner-border-sm d-none" id="spinner" role="status" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="row mt-4">
+            <div class="col-md-4 text-center mb-3">
+                <div class="p-3">
+                    <i class="bi bi-search display-6 text-primary mb-2"></i>
+                    <h6>Wikipedia Integration</h6>
+                    <p class="small text-muted">Automatically fetches and processes Wikipedia content</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+                <div class="p-3">
+                    <i class="bi bi-brain display-6 text-success mb-2"></i>
+                    <h6>RAG Technology</h6>
+                    <p class="small text-muted">Uses advanced retrieval-augmented generation</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+                <div class="p-3">
+                    <i class="bi bi-lightning display-6 text-warning mb-2"></i>
+                    <h6>Instant Setup</h6>
+                    <p class="small text-muted">Quick persona creation and knowledge base building</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('create-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = document.getElementById('btn-text');
+    const spinner = document.getElementById('spinner');
+    const imageInput = document.getElementById('image_url');
+    const preview = document.getElementById('persona-preview');
+    const defaultAvatar = '/static/img/default-avatar.png';
+
+    form.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        btnText.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Building... This may take a moment.';
+        spinner.classList.remove('d-none');
+        
+        // Add loading animation to the button
+        submitBtn.classList.add('btn-loading');
+    });
+
+    // Add some interactive features
+    document.getElementById('name').addEventListener('input', function() {
+        const value = this.value.trim();
+        if (value) {
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+        }
+    });
+
+    document.getElementById('characteristics').addEventListener('input', function() {
+        const value = this.value.trim();
+        if (value.length > 10) {
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+        }
+    });
+
+    // Live preview for persona image
+    imageInput.addEventListener('input', function() {
+        const url = this.value.trim();
+        if (url) {
+            preview.src = url;
+        } else {
+            preview.src = defaultAvatar;
+        }
+    });
+    preview.onerror = function() {
+        this.onerror = null;
+        this.src = defaultAvatar;
+    };
+</script>
+{% endblock %}
